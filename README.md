@@ -1,4 +1,4 @@
-# elec-vue
+# ezgit-gui
 
 ## Project setup
 ```
