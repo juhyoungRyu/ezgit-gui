@@ -1,8 +1,9 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, ipcMain } from "electron";
+import { app, protocol, BrowserWindow, ipcMain, dialog } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
+import { exec } from "child_process";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Scheme must be registered before the app is ready
@@ -10,13 +11,11 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } },
 ]);
 
-ipcMain.on("test", (event, argument) => {
-  console.log(event, argument);
-});
+let win;
 
 async function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 450,
     height: 600,
     webPreferences: {
@@ -25,6 +24,7 @@ async function createWindow() {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
     },
+    autoHideMenuBar: true,
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -37,6 +37,38 @@ async function createWindow() {
     win.loadURL("app://./index.html");
   }
 }
+
+ipcMain.on("selectDir", async (event, arg) => {
+  const options = {
+    title: "Select Working Directory", // Dialog title
+    properties: ["openDirectory"], // Specify that it's an open file dialog
+  };
+
+  try {
+    const result = await dialog.showOpenDialog(win, options);
+    if (!result.canceled && result.filePaths.length > 0) {
+      const selectedFolderPath = result.filePaths[0];
+      // 선택한 폴더 경로를 비동기적으로 처리
+      console.log("Selected folder:", selectedFolderPath);
+      event.reply("sendPath", selectedFolderPath);
+    } else {
+      event.reply("sendPath", "cancel");
+    }
+  } catch (error) {
+    console.error("Error opening folder picker dialog:", error);
+  }
+});
+
+ipcMain.on("execGitMethod", (e, method) => {
+  exec(`${method}`, (error, stdout, stderr) => {
+    if (error) {
+      console.log(error);
+      return;
+    }
+    console.log(stdout);
+    e.reply("gitMethodReturn", stdout);
+  });
+});
 
 // Quit when all windows are closed.
 app.on("window-all-closed", () => {

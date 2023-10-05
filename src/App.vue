@@ -7,10 +7,15 @@ import {
   ElRow,
   ElMessage,
   ElDialog,
+  ElContainer,
+  ElHeader,
+  ElMain,
+  ElFooter,
 } from "element-plus";
-import { Message, Download } from "@element-plus/icons-vue";
+import { Message, Download, FolderOpened } from "@element-plus/icons-vue";
 import ActionButton from "./components/ActionButton";
 import PopupComponent from "./components/PopupComponent.vue";
+import { ipcRenderer } from "electron";
 
 export default {
   name: "App",
@@ -22,6 +27,10 @@ export default {
     ElRow,
     ActionButton,
     ElDialog,
+    ElContainer,
+    ElHeader,
+    ElMain,
+    ElFooter,
     PopupComponent,
   },
   methods: {
@@ -61,65 +70,122 @@ export default {
     closePopup() {
       this.popupState = false;
     },
+
+    async selectDir() {
+      this.fileSelector.isLoading = true;
+      ipcRenderer.send("selectDir");
+      ipcRenderer.on("sendPath", (event, arg) => {
+        if (arg !== "cancel") {
+          this.fileSelector.path = arg;
+        }
+
+        this.fileSelector.isLoading = false;
+      });
+    },
   },
   data() {
     return {
       items: ["Push", "Pull", "Checkout"],
       popupState: false,
       popupType: "push",
-      popupFooter: {},
+      popupFooter: null,
+      fileSelector: {
+        path: "",
+        isLoading: false,
+      },
       Download,
+      FolderOpened,
     };
   },
 };
 </script>
 
 <template>
-  <ElRow class="base">
-    <ElCol :span="24">
-      <ElText class="title" type="primary" size="large" tag="b">EzGit</ElText>
-    </ElCol>
-    <ElCol :span="24">
-      <ElText class="subTitle" type="info" size="small" tag="i"
-        >For your easy git use</ElText
-      >
-    </ElCol>
+  <!-- popup -->
+  <ElDialog
+    v-model="popupState"
+    :title="`${popupType.substring(0, 1).toUpperCase()}${popupType.substring(
+      1,
+      popupType.length
+    )} Popup`"
+    width="90%"
+    custom-class="popup"
+    @open="
+      () => {
+        this.$.components.PopupComponent.components.PushPopup.methods.getChangedFileList()
+      }
+    "
+  >
+    <PopupComponent :type="popupType" />
 
-    <ElCol :span="22">
-      <ElDivider />
-    </ElCol>
+    <template v-if="popupFooter" #footer>
+      <ElButton
+        plain
+        :color="popupFooter.color"
+        :type="popupFooter.buttonType"
+        :round="popupFooter.round"
+        :icon="popupFooter.icon"
+        >{{ popupFooter.text }}
+      </ElButton>
+    </template>
+  </ElDialog>
+  <!-- popup -->
 
-    <ElDialog
-      v-model="popupState"
-      :title="`${popupType.substring(0, 1).toUpperCase()}${popupType.substring(
-        1,
-        popupType.length
-      )} Popup`"
-      width="90%"
-      custom-class="popup"
-    >
-      <PopupComponent :type="popupType" />
+  <ElContainer id="main">
+    <ElHeader height="90px" class="header">
+      <ElRow>
+        <ElCol :span="24">
+          <ElText class="title" type="primary" size="large" tag="b"
+            >EzGit</ElText
+          >
+        </ElCol>
+        <ElCol :span="24">
+          <ElText class="subTitle" type="info" size="small" tag="i"
+            >For your easy git use</ElText
+          >
+        </ElCol>
 
-      <template v-if="popupFooter" #footer>
-        <ElButton
-          plain
-          :color="popupFooter.color"
-          :type="popupFooter.buttonType"
-          :round="popupFooter.round"
-          :icon="popupFooter.icon"
-          >{{ popupFooter.text }}
-        </ElButton>
-      </template>
-    </ElDialog>
+        <ElCol :span="24">
+          <ElDivider />
+        </ElCol>
+      </ElRow>
+    </ElHeader>
 
-    <ActionButton
-      v-for="item in items"
-      v-bind:key="item"
-      :title="item"
-      @execAction="execAction"
-      @callNoti="callNoti"
-    />
-  </ElRow>
+    <ElMain>
+      <ElRow>
+        <ActionButton
+          v-for="item in items"
+          v-bind:key="item"
+          :title="item"
+          :path="fileSelector.path"
+          @execAction="execAction"
+          @callNoti="callNoti"
+        />
+      </ElRow>
+    </ElMain>
+
+    <ElFooter height="100px">
+      <ElCol :span="24">
+        <ElDivider />
+      </ElCol>
+
+      <ElRow justify="start">
+        <ElCol :span="10">
+          <ElButton
+            :loading="fileSelector.isLoading"
+            size="small"
+            @click="selectDir"
+            :icon="FolderOpened"
+            >{{
+              fileSelector.path === ""
+                ? "please select your working dir"
+                : fileSelector.path
+            }}</ElButton
+          >
+        </ElCol>
+      </ElRow>
+    </ElFooter>
+  </ElContainer>
 </template>
 
 <style>
@@ -129,14 +195,20 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 
-.base {
-  widows: 100vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#main {
+  width: 100vw;
+  height: 100vh;
+}
+
+.header {
+  margin-top: 30px;
 }
 
 .title {
@@ -158,5 +230,17 @@ export default {
 
 .popup {
   text-align: left;
+}
+
+.pathSelector {
+  height: 30vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.pathSelector button {
+  color: #888;
 }
 </style>
