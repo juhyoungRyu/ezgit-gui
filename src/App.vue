@@ -33,7 +33,7 @@ export default {
           this.popupFooter = {
             buttonType: "primary",
             icon: Message,
-            round : true,
+            round: true,
             text: "Commit",
           };
           break;
@@ -68,7 +68,7 @@ export default {
       popupState: false,
       popupType: "push",
       popupFooter: {},
-      Download
+      Download,
     };
   },
 };

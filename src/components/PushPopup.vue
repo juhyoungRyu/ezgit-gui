@@ -34,7 +34,7 @@ export default {
       <ElInput
         v-model="pushForm.commitMessage"
         placeholder="Please Input Commit Message"
-        clearable 
+        clearable
       ></ElInput>
     </ElFormItem>
   </ElForm>
