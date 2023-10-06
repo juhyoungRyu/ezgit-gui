@@ -10,7 +10,13 @@ import {
   ElMessage,
 } from "element-plus";
 import { ipcRenderer } from "electron";
-import { Refresh, Message, Check, Close } from "@element-plus/icons-vue";
+import {
+  Refresh,
+  Message,
+  Check,
+  Close,
+  Upload,
+} from "@element-plus/icons-vue";
 import { useStore } from "@/store/store";
 
 export default {
@@ -25,11 +31,11 @@ export default {
     ElDivider,
   },
   mounted() {
-    console.log("mounted : "+this.store.path)
+    console.log("mounted : " + this.store.path);
     let path = this.store.path;
     if (path !== undefined) {
       this.getChangedFileList(path);
-    } 
+    }
   },
   data() {
     const store = useStore();
@@ -37,6 +43,8 @@ export default {
     return {
       commitMessage: "",
       stagingFileList: null,
+      commitLoading: false,
+      pushLoading: false,
       checkboxLoading: false,
       commitTargetFileList: [],
       store,
@@ -44,6 +52,7 @@ export default {
       Message,
       Check,
       Close,
+      Upload,
     };
   },
   methods: {
@@ -95,9 +104,22 @@ export default {
       console.log(this.commitTargetFileList);
     },
 
-    handleCommitBtnClick() {
+    handleCommitBtnClick(path, isPush) {
+      if (isPush) {
+        this.pushLoading = true;
+      } else {
+        this.commitLoading = true;
+      }
+
       if (this.commitMessage.trim() === "") {
         this.commitMessage = "";
+
+        if (isPush) {
+          this.pushLoading = false;
+        } else {
+          this.commitLoading = false;
+        }
+
         return ElMessage({
           message: "empty commit message",
           type: "error",
@@ -108,15 +130,34 @@ export default {
       const list = this.commitTargetFileList;
 
       for (let i = 0; i < list.length; i++) {
-        if (list[i] === false) {
-          continue;
-        } else {
-          console.log(this.stagingFileList[i]);
+        if (list[i] !== false) {
           list[i] = this.stagingFileList[i];
         }
       }
 
       this.commitTargetFileList = list.filter((item) => item !== false);
+
+      ipcRenderer.send("execGitMethod", [
+        path,
+        `git add ${this.commitTargetFileList.join(" ")}`,
+      ]);
+
+      ipcRenderer.once("gitMethodReturn", async (event, arg) => {
+        if (arg !== "") {
+          ElMessage({ message: "Error", type: "error" });
+        }
+      });
+
+      ipcRenderer.send("execGitMethod", [path, `git commit -m ${this.commitMessage}`]);
+      ipcRenderer.once("gitMethodReturn", async (event, arg) => {
+        console.log(arg)
+      });
+      // commit까진 동일하게 진행
+      this.commitLoading = false;
+
+      if (isPush) {
+        // push 진행
+      }
     },
   },
   props: {},
@@ -124,9 +165,15 @@ export default {
 </script>
 
 <template>
+  <div></div>
   <ElRow justify="space-between" class="pushPopupItem">
     <ElText>Pick a target to staged</ElText>
-    <ElButton :icon="Refresh" circle size="small" @click="getChangedFileList(this.store.path)" />
+    <ElButton
+      :icon="Refresh"
+      circle
+      size="small"
+      @click="getChangedFileList(this.store.path)"
+    />
   </ElRow>
   <ElRow class="pushPopupItem" v-loading="checkboxLoading">
     <ElCol :span="5">
@@ -177,9 +224,21 @@ export default {
       plain
       :icon="Message"
       round="true"
-      @click="handleCommitBtnClick"
+      :v-loading="commitLoading"
+      @click="handleCommitBtnClick(store.path, false)"
     >
       Commit
+    </ElButton>
+
+    <ElButton
+      :disabled="!commitMessage"
+      plain
+      :icon="Upload"
+      round="true"
+      :v-loading="pushLoading"
+      @click="handleCommitBtnClick(store.path, true)"
+    >
+      Push
     </ElButton>
   </ElRow>
 </template>
