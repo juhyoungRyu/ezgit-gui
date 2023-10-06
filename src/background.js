@@ -16,8 +16,8 @@ let win;
 async function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 450,
-    height: 600,
+    width: 400,
+    height: 670,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -30,7 +30,7 @@ async function createWindow() {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
-    // if (!process.env.IS_TEST) win.webContents.openDevTools();
+    if (!process.env.IS_TEST) win.webContents.openDevTools();
   } else {
     createProtocol("app");
     // Load the index.html when not in development
@@ -50,6 +50,18 @@ ipcMain.on("selectDir", async (event, arg) => {
       const selectedFolderPath = result.filePaths[0];
       // 선택한 폴더 경로를 비동기적으로 처리
       console.log("Selected folder:", selectedFolderPath);
+
+      // Bug : 이동한 폴더에서 명령이 실행되지 않는 이슈
+      // * exec는 함수 단위로 실행되기 때문에 해당 명령이 종료되면 원래 위치로 돌아감
+
+      // exec(`cd ${selectedFolderPath}`, (error, stdout, stderr) => {
+      //   if (error) {
+      //     console.log(error);
+      //   } else {
+      //     console.log("success");
+      //   }
+      // });
+
       event.reply("sendPath", selectedFolderPath);
     } else {
       event.reply("sendPath", "cancel");
@@ -59,16 +71,29 @@ ipcMain.on("selectDir", async (event, arg) => {
   }
 });
 
-ipcMain.on("execGitMethod", (e, method) => {
-  exec(`${method}`, (error, stdout, stderr) => {
-    if (error) {
-      console.log(error);
-      return;
-    }
-    console.log(stdout);
+ipcMain.on("execGitMethod", async (e, method) => {
+  try {
+    const stdout = await executeGitCommand(method);
+    console.log("execGitMethodResult : " + stdout);
+
     e.reply("gitMethodReturn", stdout);
-  });
+  } catch (error) {
+    console.error(error);
+    e.reply("gitMethodError", error.message);
+  }
 });
+
+function executeGitCommand([cwd, command]) {
+  return new Promise((resolve, reject) => {
+    exec(command, { cwd }, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
 
 // Quit when all windows are closed.
 app.on("window-all-closed", () => {

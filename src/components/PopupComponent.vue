@@ -16,6 +16,7 @@ export default {
   methods: {},
   props: {
     type: String,
+    cwd: String,
   },
   data() {
     return {};
@@ -24,14 +25,13 @@ export default {
 </script>
 
 <template>
-  <ElRow class="popup">
-    <ElCol :span="24">
-      <PushPopup v-if="type === 'push'" />
-      <PullPopup v-if="type === 'pull'" />
-      <CheckoutPopup v-if="type === 'checkout'" />
+  <ElRow class="popup" justify="center">
+    <ElCol :span="22">
+      <PushPopup v-if="type === 'push'" :cwd="cwd" />
+      <PullPopup v-if="type === 'pull'" :cwd="cwd" />
+      <CheckoutPopup v-if="type === 'checkout'" :cwd="cwd" />
     </ElCol>
   </ElRow>
 </template>
 
-<style>
-</style>
+<style></style>

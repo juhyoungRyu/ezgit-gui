@@ -12,10 +12,11 @@ import {
   ElMain,
   ElFooter,
 } from "element-plus";
-import { Message, Download, FolderOpened } from "@element-plus/icons-vue";
+import { Download, FolderOpened } from "@element-plus/icons-vue";
 import ActionButton from "./components/ActionButton";
 import PopupComponent from "./components/PopupComponent.vue";
 import { ipcRenderer } from "electron";
+import { useStore } from "./store/store";
 
 export default {
   name: "App",
@@ -39,17 +40,10 @@ export default {
         case "push":
           this.popupState = true;
           this.popupType = "push";
-          this.popupFooter = {
-            buttonType: "primary",
-            icon: Message,
-            round: true,
-            text: "Commit",
-          };
           break;
         case "pull":
           this.popupState = true;
           this.popupType = "pull";
-          this.popupFooter = null;
           break;
         case "checkout":
           this.popupState = true;
@@ -74,13 +68,15 @@ export default {
     async selectDir() {
       this.fileSelector.isLoading = true;
       ipcRenderer.send("selectDir");
-      ipcRenderer.on("sendPath", (event, arg) => {
+      ipcRenderer.once("sendPath", (event, arg) => {
         if (arg !== "cancel") {
           this.fileSelector.path = arg;
+          this.store.setPath(arg) // 전역 스토어에 path 지정
         }
-
         this.fileSelector.isLoading = false;
       });
+      // this.fileSelector.path = "C:/Users/jhryu/Documents/ezgit-gui"; // 개발용
+      // this.fileSelector.isLoading = false; // 개발용
     },
   },
   data() {
@@ -93,8 +89,10 @@ export default {
         path: "",
         isLoading: false,
       },
+      store: useStore(),
       Download,
       FolderOpened,
+      ipcRenderer,
     };
   },
 };
@@ -104,6 +102,7 @@ export default {
   <!-- popup -->
   <ElDialog
     v-model="popupState"
+    v-if="popupState"
     :title="`${popupType.substring(0, 1).toUpperCase()}${popupType.substring(
       1,
       popupType.length
@@ -112,22 +111,11 @@ export default {
     custom-class="popup"
     @open="
       () => {
-        this.$.components.PopupComponent.components.PushPopup.methods.getChangedFileList()
+        this.$.components.PopupComponent.components.PushPopup.methods.getChangedFileList();
       }
     "
   >
-    <PopupComponent :type="popupType" />
-
-    <template v-if="popupFooter" #footer>
-      <ElButton
-        plain
-        :color="popupFooter.color"
-        :type="popupFooter.buttonType"
-        :round="popupFooter.round"
-        :icon="popupFooter.icon"
-        >{{ popupFooter.text }}
-      </ElButton>
-    </template>
+    <PopupComponent :type="popupType" :cwd="fileSelector.path" />
   </ElDialog>
   <!-- popup -->
 
@@ -159,7 +147,6 @@ export default {
           :title="item"
           :path="fileSelector.path"
           @execAction="execAction"
-          @callNoti="callNoti"
         />
       </ElRow>
     </ElMain>
@@ -191,6 +178,7 @@ export default {
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
