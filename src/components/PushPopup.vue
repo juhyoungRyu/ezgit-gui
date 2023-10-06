@@ -105,7 +105,7 @@ export default {
     },
 
     handleCommitBtnClick(path, isPush) {
-      console.log(path, isPush)
+      console.log(path, isPush);
 
       if (isPush) {
         this.pushLoading = true;
@@ -171,7 +171,11 @@ export default {
         // push 진행
         ipcRenderer.send("execGitMethod", [path, `git push`]);
         ipcRenderer.once("gitMethodReturn", async (event, arg) => {
-          console.log("arg : "+arg);
+          if (arg !== "") {
+            return ElMessage({ message: "Error", type: "error" });
+          }
+
+          ElMessage({ message: "success", type: "success", grouping: true });
         });
       }
     },
