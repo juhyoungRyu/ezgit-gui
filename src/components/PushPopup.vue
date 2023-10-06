@@ -144,13 +144,19 @@ export default {
 
       ipcRenderer.once("gitMethodReturn", async (event, arg) => {
         if (arg !== "") {
-          ElMessage({ message: "Error", type: "error" });
+          return ElMessage({ message: "Error", type: "error" });
         }
+
+        ElMessage({message: 'Success', type:'success'})
       });
 
       ipcRenderer.send("execGitMethod", [path, `git commit -m ${this.commitMessage}`]);
       ipcRenderer.once("gitMethodReturn", async (event, arg) => {
-        ElMessage(arg)
+        if (arg !== "") {
+          return ElMessage({ message: "Error", type: "error" });
+        }
+
+        ElMessage({message: 'Success', type:'success'})
       });
 
       // commit까진 동일하게 진행
