@@ -147,7 +147,7 @@ export default {
           return ElMessage({ message: "Error", type: "error" });
         }
 
-        ElMessage({message: 'Success', type:'success'})
+        ElMessage({message: 'success', type:'success',grouping: true,})
       });
 
       ipcRenderer.send("execGitMethod", [path, `git commit -m ${this.commitMessage}`]);
@@ -156,7 +156,7 @@ export default {
           return ElMessage({ message: "Error", type: "error" });
         }
 
-        ElMessage({message: 'Success', type:'success'})
+        ElMessage({message: 'success', type:'success',grouping: true,})
       });
 
       // commit까진 동일하게 진행
