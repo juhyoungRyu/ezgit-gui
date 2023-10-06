@@ -150,8 +150,9 @@ export default {
 
       ipcRenderer.send("execGitMethod", [path, `git commit -m ${this.commitMessage}`]);
       ipcRenderer.once("gitMethodReturn", async (event, arg) => {
-        console.log(arg)
+        ElMessage(arg)
       });
+
       // commit까진 동일하게 진행
       this.commitLoading = false;
 
