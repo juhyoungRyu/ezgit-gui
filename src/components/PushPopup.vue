@@ -56,10 +56,6 @@ export default {
     };
   },
   methods: {
-    handleClose() {
-      this.$emit("closePopup");
-    },
-
     async getChangedFileList(path) {
       const _this = this;
       _this.stagingFileList = null;
@@ -144,46 +140,45 @@ export default {
         `git add ${this.commitTargetFileList.join(" ")}`,
       ]);
 
-      ipcRenderer.once("gitMethodReturn", async (event, arg) => {
-        if (arg !== "") {
-          return ElMessage({ message: "Error", type: "error" });
-        }
+      // ipcRenderer.once("gitMethodReturn", async (event, arg) => {
+      //   if (arg !== "") {
+      //     return ElMessage({ message: "Error", type: "error" });
+      //   }
 
-        ElMessage({ message: "success", type: "success", grouping: true });
-      });
+      //   ElMessage({ message: "success", type: "success", grouping: true });
+      // });
 
       ipcRenderer.send("execGitMethod", [
         path,
         `git commit -m "${this.commitMessage}"`,
       ]);
-      ipcRenderer.once("gitMethodReturn", async (event, arg) => {
-        if (arg !== "") {
-          return ElMessage({ message: "Error", type: "error" });
-        }
+      // ipcRenderer.once("gitMethodReturn", async (event, arg) => {
+      //   if (arg !== "") {
+      //     return ElMessage({ message: "Error", type: "error" });
+      //   }
 
-        ElMessage({ message: "success", type: "success", grouping: true });
-      });
+      //   ElMessage({ message: "success", type: "success", grouping: true });
+      // });
 
-      // commit까진 동일하게 진행
-      this.commitLoading = false;
+      // // commit까진 동일하게 진행
+      // this.commitLoading = false;
 
-      if (isPush) {
-        // push 진행
-        ipcRenderer.send("execGitMethod", [path, `git push`]);
-        ipcRenderer.once("gitMethodReturn", async (event, arg) => {
-          if (arg !== "") {
-            return ElMessage({ message: "Error", type: "error" });
-          }
+      // if (isPush) {
+      //   // push 진행
+      //   ipcRenderer.send("execGitMethod", [path, `git push`]);
+      //   ipcRenderer.once("gitMethodReturn", async (event, arg) => {
+      //     if (arg !== "") {
+      //       return ElMessage({ message: "Error", type: "error" });
+      //     }
 
-          ElMessage({ message: "success", type: "success", grouping: true });
-        });
-      }
+      //     ElMessage({ message: "success", type: "success", grouping: true });
+      //   });
+      // }
 
-      this.$emit("closePopup");
+      // this.$emit("closePopup");
     },
   },
-  props: {
-  },
+  props: {},
 };
 </script>
 

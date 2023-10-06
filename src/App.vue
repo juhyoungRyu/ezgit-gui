@@ -115,7 +115,7 @@ export default {
       }
     "
   >
-    <PopupComponent :type="popupType" @closePopup="closePopup" />
+    <PopupComponent :type="popupType" />
   </ElDialog>
   <!-- popup -->
 
