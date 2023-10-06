@@ -13,7 +13,8 @@ npm run electron:serve
 ### Compiles and minifies for production
 ```
 npm run electron:build
-
+```
 ### Development Environment
 ```
 node : 16.x
+```
