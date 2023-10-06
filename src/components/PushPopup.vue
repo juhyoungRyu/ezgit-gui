@@ -147,16 +147,19 @@ export default {
           return ElMessage({ message: "Error", type: "error" });
         }
 
-        ElMessage({message: 'success', type:'success',grouping: true,})
+        ElMessage({ message: "success", type: "success", grouping: true });
       });
 
-      ipcRenderer.send("execGitMethod", [path, `git commit -m ${this.commitMessage}`]);
+      ipcRenderer.send("execGitMethod", [
+        path,
+        `git commit -m "${this.commitMessage}"`,
+      ]);
       ipcRenderer.once("gitMethodReturn", async (event, arg) => {
         if (arg !== "") {
           return ElMessage({ message: "Error", type: "error" });
         }
 
-        ElMessage({message: 'success', type:'success',grouping: true,})
+        ElMessage({ message: "success", type: "success", grouping: true });
       });
 
       // commit까진 동일하게 진행
@@ -164,6 +167,10 @@ export default {
 
       if (isPush) {
         // push 진행
+        ipcRenderer.send("execGitMethod", [path, `git push`]);
+        ipcRenderer.once("gitMethodReturn", async (event, arg) => {
+          console.log(arg);
+        });
       }
     },
   },
