@@ -178,9 +178,14 @@ export default {
           ElMessage({ message: "success", type: "success", grouping: true });
         });
       }
+
+      this.$emit('closePopup');
+
     },
   },
-  props: {},
+  props: {
+    closePopup:Function
+  },
 };
 </script>
 
