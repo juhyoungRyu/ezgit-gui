@@ -71,7 +71,7 @@ export default {
       ipcRenderer.once("sendPath", (event, arg) => {
         if (arg !== "cancel") {
           this.fileSelector.path = arg;
-          this.store.setPath(arg) // 전역 스토어에 path 지정
+          this.store.setPath(arg); // 전역 스토어에 path 지정
         }
         this.fileSelector.isLoading = false;
       });
@@ -115,7 +115,7 @@ export default {
       }
     "
   >
-    <PopupComponent :type="popupType" :cwd="fileSelector.path" />
+    <PopupComponent :type="popupType" @closePopup="closePopup" />
   </ElDialog>
   <!-- popup -->
 

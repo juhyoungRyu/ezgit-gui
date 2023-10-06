@@ -13,10 +13,13 @@ export default {
     ElCol,
     ElRow,
   },
-  methods: {},
+  methods: {
+    closePopup() {
+      this.$emit('closePopup')
+    }
+  },
   props: {
     type: String,
-    closePopup : Function
   },
   data() {
     return {};
@@ -27,9 +30,9 @@ export default {
 <template>
   <ElRow class="popup" justify="center">
     <ElCol :span="22">
-      <PushPopup v-if="type === 'push'" :@closePopup="closePopup" />
-      <PullPopup v-if="type === 'pull'" :@closePopup="closePopup" />
-      <CheckoutPopup v-if="type === 'checkout'" :@closePopup="closePopup" />
+      <PushPopup v-if="type === 'push'" @closePopup="() => closePopup" />
+      <PullPopup v-if="type === 'pull'" @closePopup="() => closePopup" />
+      <CheckoutPopup v-if="type === 'checkout'" @closePopup="() => closePopup" />
     </ElCol>
   </ElRow>
 </template>

@@ -179,12 +179,10 @@ export default {
         });
       }
 
-      this.$emit('closePopup');
-
+      this.$emit("closePopup");
     },
   },
   props: {
-    closePopup:Function
   },
 };
 </script>
