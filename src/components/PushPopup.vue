@@ -169,7 +169,7 @@ export default {
         // push 진행
         ipcRenderer.send("execGitMethod", [path, `git push`]);
         ipcRenderer.once("gitMethodReturn", async (event, arg) => {
-          console.log(arg);
+          console.log("arg : "+arg);
         });
       }
     },
