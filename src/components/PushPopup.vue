@@ -105,6 +105,8 @@ export default {
     },
 
     handleCommitBtnClick(path, isPush) {
+      console.log(path, isPush)
+
       if (isPush) {
         this.pushLoading = true;
       } else {
